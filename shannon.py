@@ -1,6 +1,6 @@
-import fractions
 import math
-import pickle
+# import ctypes
+# import pickle
 from pprint import pprint
 from fractions import Fraction
 from collections import namedtuple, OrderedDict
@@ -20,12 +20,8 @@ def readFile(filename):
 def writeFile(filename,data):
     return open(filename,"wb").write(data)
 
-def itoB(n,bits):
-    bn = ""
-    for i in range(0,bits):
-        bn = "{}".format(n % 2) + bn
-        n = math.floor(n/2)
-    return bn
+def binary(n):
+    return bin(n).replace("b","")
 
 def letterFreq(data):
     return {ch: data.count(ch) for ch in data} 
@@ -34,38 +30,42 @@ def calcProb(data):
     n = sum(data.values())
     ordered = list(data.items())
     ordered.sort(key=lambda p:p[1])
-    print(ordered)
     d = OrderedDict(ordered)
     for ch in data:
         d[ch] = (data[ch]/n)
     return d
 
 def cumilativeProb(probs):
+    ordered = list(probs.items())
+    ordered.sort(key=lambda p:p[1], reverse=True)
+    probs = OrderedDict(ordered)
     d = OrderedDict()
-    last = 0
     k = list(probs.keys())
     d[k[0]] = 0
+    last = probs[k[0]]
     for ch in k[1:]:
         d[ch] = probs[ch] + last
         last = probs[ch] + last
     return d
 
-def codeword(cprobs):
+def codeword(cprobs,p2):
     d = OrderedDict()
     for ch in cprobs:
-        d[ch] = math.ceil(-math.log2(cprobs[ch]))
+        n = math.ceil(-math.log2(cprobs[ch]))
+        d[ch] = binary(math.ceil(p2[ch] * 10000000))[-n:]
     return d
 
 data = readFile("test.txt")
 fq = letterFreq(data)
 p = calcProb(fq)
 cp = cumilativeProb(p)
-l = codeword(p)
+l = codeword(p,cp)
+
 print("Frequency")
 pprint(fq,indent=4)
 print("Probability")
 pprint(p,indent=4)
 print("Cumulative Probability")
 pprint(cp,indent=4)
-print("Codeword Length")
+print("Codeword")
 pprint(l,indent=4)
